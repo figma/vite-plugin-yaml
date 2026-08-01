@@ -1,4 +1,4 @@
-[![Pipeline](https://github.com/Modyfi/vite-plugin-yaml/actions/workflows/pipeline.yml/badge.svg)](https://github.com/Modyfi/vite-plugin-yaml/actions/workflows/pipeline.yml)
+[![Pipeline](https://github.com/figma/vite-plugin-yaml/actions/workflows/pipeline.yml/badge.svg)](https://github.com/figma/vite-plugin-yaml/actions/workflows/pipeline.yml)
 
 # 🧹 vite-plugin-yaml
 

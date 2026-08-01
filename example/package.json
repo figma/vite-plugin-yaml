@@ -16,6 +16,9 @@
     "@modyfi/vite-plugin-yaml": "workspace:*",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
-    "@vitejs/plugin-react": "4.2.1"
+    "@vitejs/plugin-react": "4.2.1",
+    "semver": "^7.6.3",
+    "typescript": "5.9.3",
+    "vite": "5.4.21"
   }
 }
