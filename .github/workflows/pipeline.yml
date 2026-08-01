@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [20.x, 22.x]
         os:
           - ubuntu-latest
           - macos-latest
@@ -35,6 +35,12 @@ jobs:
           cache: 'pnpm'
 
       - run: pnpm i
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
 
       - name: Build Vite plugin
         run: pnpm build
