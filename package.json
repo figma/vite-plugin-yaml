@@ -13,7 +13,10 @@
     "example:dev": "pnpm -C example run dev",
     "example:build": "pnpm run build && pnpm -C example run build",
     "build": "tsup",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "exports": {
     ".": {
@@ -59,13 +62,14 @@
   },
   "dependencies": {
     "@rollup/pluginutils": "^5.1.0",
-    "js-yaml": "^4.3.1",
-    "tosource": "2.0.0-alpha.3"
+    "js-yaml": "^4.3.1"
   },
   "devDependencies": {
     "@types/js-yaml": "4.0.9",
+    "@vitest/coverage-v8": "2.1.9",
     "tsup": "8.5.1",
     "typescript": "5.9.3",
-    "vite": "7.3.6"
+    "vite": "7.3.6",
+    "vitest": "2.1.9"
   }
 }

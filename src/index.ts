@@ -1,6 +1,7 @@
 import { load, DEFAULT_SCHEMA } from 'js-yaml';
 import { createFilter } from '@rollup/pluginutils';
-import toSource from 'tosource';
+
+import { serialize } from './serialize';
 
 import type { YAMLException, Schema } from 'js-yaml';
 import type { Plugin } from 'vite';
@@ -28,12 +29,6 @@ export type PluginOptions = {
    */
   schema?: Schema;
   /**
-   * A boolean to determine if JSON object should be serialized.
-   *
-   * @see https://www.npmjs.com/package/tosource for the motivation behind serialization of JSON.
-   */
-  raw?: boolean;
-  /**
    * A function that will be called for error reporting.
    *
    * Defaults to `console.warn()`.
@@ -41,42 +36,48 @@ export type PluginOptions = {
   onWarning?: (warning: YAMLException) => void;
 };
 
-const yamlExtension = /\.ya?ml$/;
+const yamlExtension = /\.ya?ml(?:$|\?)/;
+
+/**
+ * Queries through which Vite serves a file as something other than its own
+ * contents. By the time `transform` runs, `?raw` has already become a JS module
+ * exporting a string and `?url` a module exporting a path, so neither is YAML
+ * any more. Mirrors Vite's own `isSpecialQuery`.
+ */
+const specialQuery = /[?&](?:worker|sharedworker|raw|url)\b/;
 
 /**
  * Transform YAML files to JS objects.
  */
-export default (
-  options: PluginOptions = { schema: DEFAULT_SCHEMA }
-): Plugin => ({
-  name: 'vite:transform-yaml',
+export default (options: PluginOptions = {}): Plugin => {
+  const filter = createFilter(options.include, options.exclude);
+  const schema = options.schema ?? DEFAULT_SCHEMA;
+  const onWarning =
+    typeof options.onWarning === 'function'
+      ? options.onWarning
+      : (warning: YAMLException) => console.warn(warning.toString());
 
-  async transform(code: string, id: string) {
-    if (yamlExtension.test(id)) {
-      // Filters the filesystem for files to include/exclude. Includes all files by default.
-      const filter = createFilter(options.include, options.exclude);
+  return {
+    name: 'vite:transform-yaml',
 
-      if (!filter(id)) {
-        return null;
-      }
+    transform(code: string, id: string) {
+      if (!yamlExtension.test(id) || specialQuery.test(id)) return null;
 
-      /**
-       * Transforms file to JS object with customizable schema and error reporting.
-       */
-      const yamlData = load(code, {
-        filename: id,
-        schema: options.schema,
-        onWarning: (warning: YAMLException) =>
-          options?.onWarning && typeof options.onWarning === 'function'
-            ? options.onWarning(warning)
-            : console.warn(warning.toString()),
-      });
+      // Some ids carry a query — `?used` is the one Vite generates that still
+      // holds YAML — so both the extension test above and the patterns below
+      // have to look at the path alone. Vite strips `?t=` and `?import` before
+      // the plugin pipeline, so those never arrive here.
+      const [filepath] = id.split('?');
+      if (!filter(filepath)) return null;
+
+      const data = load(code, { filename: filepath, schema, onWarning });
 
       return {
-        code: `const data = ${options.raw ? yamlData : toSource(yamlData)};\nexport default data;`,
-        map: { mappings: "" },
+        code: `const data = ${serialize(data, filepath)};\nexport default data;`,
+        // YAML lines have no counterpart in an emitted object, so there is
+        // nothing to map. An empty map stops Rollup warning about the gap.
+        map: { mappings: '' },
       };
-    }
-    return null;
-  },
-});
+    },
+  };
+};
