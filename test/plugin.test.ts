@@ -72,6 +72,16 @@ describe('include and exclude', () => {
     expect(transform('a: 1', '/src/kept/a.yaml', options)).not.toBeNull();
   });
 
+  // The pattern the README tells people to use for splitting files between two
+  // YAML plugins. A pattern that is not anchored resolves against process.cwd(),
+  // which is not reliably the project root, so `./translations/**` matches
+  // nothing and the advice has to be a form that does not depend on cwd.
+  it('excludes with the anchored pattern the README recommends', () => {
+    const id = '/project/translations/en.yaml';
+    expect(transform('a: 1', id, { exclude: '**/translations/**' })).toBeNull();
+    expect(transform('a: 1', id, { exclude: '/project/translations/**' })).toBeNull();
+  });
+
   // The query is not part of the path the user wrote a pattern for.
   it('matches patterns against the path, not the query', () => {
     const options = { exclude: '**/skipped/**' };

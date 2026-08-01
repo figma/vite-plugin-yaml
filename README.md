@@ -122,9 +122,16 @@ its `include` option covers your YAML.
 Give each plugin its own files:
 
 ```ts
-ViteYaml({ exclude: './translations/**' }),
+ViteYaml({ exclude: '**/translations/**' }),
 VueI18nPlugin({ include: resolve(__dirname, './translations/**') }),
 ```
+
+`include` and `exclude` are matched against absolute paths, and a pattern that is not
+itself absolute is resolved against `process.cwd()` — which is not reliably your project
+root in a monorepo, or whenever Vite is started with `--config` from elsewhere. Write the
+pattern so it does not depend on that, either by anchoring it with a leading `**/` as
+above or by passing an absolute path from `resolve(__dirname, …)`. A bare
+`'./translations/**'` matches nothing.
 
 ### The browser reports a YAML file has no default export
 
