@@ -60,24 +60,31 @@ export default (options: PluginOptions = {}): Plugin => {
   return {
     name: 'vite:transform-yaml',
 
-    transform(code: string, id: string) {
-      if (!yamlExtension.test(id) || specialQuery.test(id)) return null;
+    transform: {
+      // Rolldown and Rollup >=4.38 skip the handler entirely for ids that miss
+      // this filter, which keeps the plugin off every non-YAML module in the
+      // graph. Older versions ignore the field and call the handler as before.
+      filter: { id: { include: yamlExtension, exclude: specialQuery } },
 
-      // Some ids carry a query — `?used` is the one Vite generates that still
-      // holds YAML — so both the extension test above and the patterns below
-      // have to look at the path alone. Vite strips `?t=` and `?import` before
-      // the plugin pipeline, so those never arrive here.
-      const [filepath] = id.split('?');
-      if (!filter(filepath)) return null;
+      handler(code: string, id: string) {
+        if (!yamlExtension.test(id) || specialQuery.test(id)) return null;
 
-      const data = load(code, { filename: filepath, schema, onWarning });
+        // Some ids carry a query — `?used` is the one Vite generates that still
+        // holds YAML — so both the extension test above and the patterns below
+        // have to look at the path alone. Vite strips `?t=` and `?import` before
+        // the plugin pipeline, so those never arrive here.
+        const [filepath] = id.split('?');
+        if (!filter(filepath)) return null;
 
-      return {
-        code: `const data = ${serialize(data, filepath)};\nexport default data;`,
-        // YAML lines have no counterpart in an emitted object, so there is
-        // nothing to map. An empty map stops Rollup warning about the gap.
-        map: { mappings: '' },
-      };
+        const data = load(code, { filename: filepath, schema, onWarning });
+
+        return {
+          code: `const data = ${serialize(data, filepath)};\nexport default data;`,
+          // YAML lines have no counterpart in an emitted object, so there is
+          // nothing to map. An empty map stops Rollup warning about the gap.
+          map: { mappings: '' },
+        };
+      },
     },
   };
 };

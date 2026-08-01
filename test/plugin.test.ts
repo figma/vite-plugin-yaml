@@ -9,9 +9,9 @@ import type { Plugin } from 'vite';
 
 function transform(code: string, id = '/project/src/fixture.yaml', options?: PluginOptions) {
   const { transform } = ViteYaml(options) as Plugin & {
-    transform: (code: string, id: string) => { code: string } | null;
+    transform: { handler: (code: string, id: string) => { code: string } | null };
   };
-  return transform(code, id);
+  return transform.handler(code, id);
 }
 
 /**

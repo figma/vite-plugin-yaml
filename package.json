@@ -1,6 +1,6 @@
 {
   "name": "@modyfi/vite-plugin-yaml",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "Import YAML files as JS objects 🔌",
   "type": "module",
   "author": {
